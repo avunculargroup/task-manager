@@ -446,6 +446,21 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 * Confirm RLS enabled
 * Test policies manually before release
 
+### **Database Setup / Migration Process**
+
+1. **Fresh environment**
+   * Install Supabase CLI (`npm i -g supabase` or use project-local binary).
+   * Execute `supabase start` to launch the local Postgres + Studio stack.
+   * Run `supabase db reset --db-url "$SUPABASE_DB_URL"` to apply every migration from the `/supabase/migrations` directory and seed default data.
+   * Copy the generated `anon` and `service_role` keys into `.env.local` (or run `pnpm env:pull` once secrets are provisioned).
+2. **Out-of-date schema detected**
+   * Run `supabase db diff --linked` to confirm drift; if migrations are missing locally, pull latest main branch.
+   * Apply pending migrations with `supabase db push`; for staged environments run `supabase db remote commit && supabase db remote apply`.
+   * If automated CI detects mismatched migration hash, fail the build and follow the same push/apply sequence before re-running CI.
+3. **Safety checks**
+   * After applying migrations, run `pnpm test:integration --filter db` to ensure key CRUD flows still pass.
+   * Verify RLS policies by executing the provided Postman collection or Supabase SQL test scripts before announcing readiness.
+
 ### **Next.js**
 
 * Deploy on Vercel, using server components where possible
