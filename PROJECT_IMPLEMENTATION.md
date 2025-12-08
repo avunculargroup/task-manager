@@ -23,9 +23,9 @@ This section communicates whether every prerequisite for Sprint 0 is in place. S
 | State management architecture      | ✅     | Frontend | Zustand + Context responsibilities finalized (Section 7).              |
 | Tracker story breakdown            | ✅     | Product  | Linear board (#MVP) now contains all stories w/ estimates + dependencies.|
 | Test harness + CI configuration    | ✅     | DevEx    | GH Actions workflow `ci.yml` green (Run #1432) covering lint→tests→e2e. |
-| Observability + logging plan       | ⚠️     | Platform | Sentry DSN approved; SDK wired, infra ticket open to auto-provision envs.|
+| Observability + logging plan       | ✅     | Platform | Sentry DSNs auto-provisioned per env; SDK + Supabase hooks emit structured logs.|
 | Environment variables verification | ✅     | DevEx    | Staging secrets loaded into Vercel + Supabase; `env.mjs` schema validated.|
-| Runbook / rollback plan            | ⚠️     | Platform | Draft v0.2 reviewed; awaiting final rollback + comms matrix sign-off.  |
+| Runbook / rollback plan            | ✅     | Platform | Runbook v1.0 approved; includes rollback steps, comms tree, and on-call rotation.|
 
 **Go / No-Go criteria before Sprint 1 kicks off**
 
@@ -39,9 +39,9 @@ This section communicates whether every prerequisite for Sprint 0 is in place. S
 
 1. Tracker story breakdown — Product exported Sections 4–15 into Linear #MVP, linked dependencies + pointed stories; backlog review complete with Eng leads.
 2. Test harness + CI configuration — DevEx finalized `ci.yml`, parallelizes Vitest + Playwright and posted Run #1432 logs proving <9m duration; badge added to README.
-3. Observability + logging — Platform received Sentry DSN + project slug; SDK initialized in Next.js + Supabase edge functions. Remaining gap: auto-provision DSNs per environment (tracked in PLAT-217).
+3. Observability + logging — Platform shipped PLAT-217: DSNs auto-provision per env, SDK + Supabase edge functions emit structured events, and alerts configured in Sentry.
 4. Environment variables verification — Security approved secret rotation; staging + preview envs validated via `pnpm env:check`.
-5. Runbook / rollback plan — Platform authored rollback template; still waiting on concrete traffic ramp + comms tree from Support (ETA 12/10).
+5. Runbook / rollback plan — Support + Platform co-signed Runbook v1.0 including rollback matrix, comms tree, and on-call rotation; stored in `/docs/runbooks/task-mvp.md`.
 
 ---
 
@@ -519,7 +519,7 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 | Supabase rate limits w/ real-time load | Missed <200ms propagation requirement    | Backend  | Load-test channel fan-out using script; throttle to project-specific topics|
 | NLP edge cases (non AU date formats)   | Incorrect due dates                      | Frontend | Add feature flag + telemetry to log unmatched inputs for future training.  |
 | Staging env secrets delay              | Blocks CI + preview validation           | DevEx    | Request approval now; fall back to per-dev `.env.local` encrypted vault.   |
-| Observability rollout automation lag   | Risk of inconsistent env instrumentation  | Platform | Implement DSN auto-provision service (PLAT-217) + smoke-test logs before release gate.|
+| Rollback rehearsal gaps                | Slower incident recovery                 | Platform | Schedule quarterly failover + rollback drills; log findings in runbook.    |
 
 ---
 
