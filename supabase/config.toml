@@ -1,0 +1,8 @@
+project_id = "taskline"
+
+[api]
+port = 54321
+schemas = ["public"]
+
+[studio]
+port = 54323
