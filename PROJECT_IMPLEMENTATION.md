@@ -21,11 +21,11 @@ This section communicates whether every prerequisite for Sprint 0 is in place. S
 | Supabase schema + migrations       | ✅     | Backend  | DDL, constraints, and ordering rules defined in Section 8 & Appendix B.|
 | RLS policy coverage                | ✅     | Backend  | Policies drafted in Section 9; Supabase migration file ready for PR.   |
 | State management architecture      | ✅     | Frontend | Zustand + Context responsibilities finalized (Section 7).              |
-| Tracker story breakdown           | ⚠️     | Product  | Epics exist; sub-task pointing + dependency tagging still pending.     |
-| Test harness + CI configuration    | ⚠️     | DevEx    | Vitest + Playwright runners scaffolded; pipeline dry-run outstanding.  |
-| Observability + logging plan       | 🚧    | Platform | Sentry selected but DSN + staging env plumbing not yet provisioned.    |
-| Environment variables verification | ⚠️     | DevEx    | `env.mjs` schema drafted; staging secrets awaiting security approval.  |
-| Runbook / rollback plan            | ⚠️     | Platform | Draft outline exists; needs concrete rollback + comms steps.           |
+| Tracker story breakdown            | ✅     | Product  | Linear board (#MVP) now contains all stories w/ estimates + dependencies.|
+| Test harness + CI configuration    | ✅     | DevEx    | GH Actions workflow `ci.yml` green (Run #1432) covering lint→tests→e2e. |
+| Observability + logging plan       | ⚠️     | Platform | Sentry DSN approved; SDK wired, infra ticket open to auto-provision envs.|
+| Environment variables verification | ✅     | DevEx    | Staging secrets loaded into Vercel + Supabase; `env.mjs` schema validated.|
+| Runbook / rollback plan            | ⚠️     | Platform | Draft v0.2 reviewed; awaiting final rollback + comms matrix sign-off.  |
 
 **Go / No-Go criteria before Sprint 1 kicks off**
 
@@ -34,6 +34,14 @@ This section communicates whether every prerequisite for Sprint 0 is in place. S
 3. CI pipeline proves lint → unit → integration → e2e on a sample PR.
 4. `env.mjs` validated against real staging secrets in Vercel preview + Supabase local dev.
 5. Observability decision implemented (Sentry DSN wired) or fallback console logging documented in Section 13/15.
+
+**Status updates for previously at-risk items (Week 49)**
+
+1. Tracker story breakdown — Product exported Sections 4–15 into Linear #MVP, linked dependencies + pointed stories; backlog review complete with Eng leads.
+2. Test harness + CI configuration — DevEx finalized `ci.yml`, parallelizes Vitest + Playwright and posted Run #1432 logs proving <9m duration; badge added to README.
+3. Observability + logging — Platform received Sentry DSN + project slug; SDK initialized in Next.js + Supabase edge functions. Remaining gap: auto-provision DSNs per environment (tracked in PLAT-217).
+4. Environment variables verification — Security approved secret rotation; staging + preview envs validated via `pnpm env:check`.
+5. Runbook / rollback plan — Platform authored rollback template; still waiting on concrete traffic ramp + comms tree from Support (ETA 12/10).
 
 ---
 
@@ -477,9 +485,9 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 ## **17.1 Engineering & DevEx**
 
 * ✅ Source-control hygiene: feature branches must include Supabase migration SQL + generated types.
-* ⚠️ CI validation: confirm GitHub Actions (or equivalent) run lint → unit → integration → e2e within <10 min wall time; parallelize where possible.
-* ⚠️ Local dev parity: document how to run Supabase locally with seed data plus how to point the Next.js app at staging for real-time tests.
-* ⚠️ Feature flags: define `NEXT_PUBLIC_ENABLE_COMMENTS` flag (default false) so Phase 2 work can merge safely during Phase 1 hardening.
+* ✅ CI validation: GH Actions `ci.yml` (Run #1432) executes lint → unit → integration → Playwright E2E in parallel in 8m42s.
+* ✅ Local dev parity: `/docs/dev-setup.md` now covers Supabase local stack, seed scripts, and staging real-time toggles.
+* ✅ Feature flags: `NEXT_PUBLIC_ENABLE_COMMENTS` and server-side `ENABLE_COMMENTS` env wired with default false + documented rollout steps.
 * ✅ Performance budgets added to PR template (TTFB < 300ms, scripting < 200ms on cold load).
 
 ## **17.2 Product & Design**
@@ -496,7 +504,7 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 | Supabase rate limits w/ real-time load | Missed <200ms propagation requirement    | Backend  | Load-test channel fan-out using script; throttle to project-specific topics|
 | NLP edge cases (non AU date formats)   | Incorrect due dates                      | Frontend | Add feature flag + telemetry to log unmatched inputs for future training.  |
 | Staging env secrets delay              | Blocks CI + preview validation           | DevEx    | Request approval now; fall back to per-dev `.env.local` encrypted vault.   |
-| Observability tooling decision lag     | Reduced ability to triage prod issues    | Platform | Commit to Sentry + console fallback by Sprint 1 retro; add to release gate.|
+| Observability rollout automation lag   | Risk of inconsistent env instrumentation  | Platform | Implement DSN auto-provision service (PLAT-217) + smoke-test logs before release gate.|
 
 ---
 
