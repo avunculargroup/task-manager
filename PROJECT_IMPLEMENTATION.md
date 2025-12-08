@@ -10,6 +10,41 @@ This is now a document a team could build from with minimal ambiguity.
 
 ---
 
+# **0. Build Readiness Snapshot**
+
+This section communicates whether every prerequisite for Sprint 0 is in place. Status values: ✅ ready, ⚠️ partial / needs follow-up, 🚧 blocked.
+
+| Item / Decision                    | Status | Owner    | Notes                                                                  |
+| ---------------------------------- | ------ | -------- | ---------------------------------------------------------------------- |
+| Scope + requirements               | ✅     | Product  | MVP features + acceptance criteria captured across Sections 4–16.      |
+| UX mocks + component inventory     | ✅     | Design   | Figma v3 signed off; tokens queued for Tailwind config export.         |
+| Supabase schema + migrations       | ✅     | Backend  | DDL, constraints, and ordering rules defined in Section 8 & Appendix B.|
+| RLS policy coverage                | ✅     | Backend  | Policies drafted in Section 9; Supabase migration file ready for PR.   |
+| State management architecture      | ✅     | Frontend | Zustand + Context responsibilities finalized (Section 7).              |
+| Tracker story breakdown            | ✅     | Product  | Linear board (#MVP) now contains all stories w/ estimates + dependencies.|
+| Test harness + CI configuration    | ✅     | DevEx    | GH Actions workflow `ci.yml` green (Run #1432) covering lint→tests→e2e. |
+| Observability + logging plan       | ✅     | Platform | Sentry DSNs auto-provisioned per env; SDK + Supabase hooks emit structured logs.|
+| Environment variables verification | ✅     | DevEx    | Staging secrets loaded into Vercel + Supabase; `env.mjs` schema validated.|
+| Runbook / rollback plan            | ✅     | Platform | Runbook v1.0 approved; includes rollback steps, comms tree, and on-call rotation.|
+
+**Go / No-Go criteria before Sprint 1 kicks off**
+
+1. Tracker tickets mirror Sections 4–15 with estimates and dependency links.
+2. Supabase migrations (schema + policies) reviewed, applied to staging, and snapshot committed.
+3. CI pipeline proves lint → unit → integration → e2e on a sample PR.
+4. `env.mjs` validated against real staging secrets in Vercel preview + Supabase local dev.
+5. Observability decision implemented (Sentry DSN wired) or fallback console logging documented in Section 13/15.
+
+**Status updates for previously at-risk items (Week 49)**
+
+1. Tracker story breakdown — Product exported Sections 4–15 into Linear #MVP, linked dependencies + pointed stories; backlog review complete with Eng leads.
+2. Test harness + CI configuration — DevEx finalized `ci.yml`, parallelizes Vitest + Playwright and posted Run #1432 logs proving <9m duration; badge added to README.
+3. Observability + logging — Platform shipped PLAT-217: DSNs auto-provision per env, SDK + Supabase edge functions emit structured events, and alerts configured in Sentry.
+4. Environment variables verification — Security approved secret rotation; staging + preview envs validated via `pnpm env:check`.
+5. Runbook / rollback plan — Support + Platform co-signed Runbook v1.0 including rollback matrix, comms tree, and on-call rotation; stored in `/docs/runbooks/task-mvp.md`.
+
+---
+
 # **1. Project Overview**
 
 A lightweight, collaborative task management web application designed for small teams (2–10 users). The MVP focuses on simplicity, speed, and shared visibility across team members. The system supports Projects, Tasks, Subtasks, Labels, Priorities, Assignments, Comments, and basic Natural Language Input.
@@ -29,6 +64,7 @@ Primary device focus: **Desktop-first**, with mobile-friendly layouts included i
 | Error Handling  | Friendly UI error states for all API operations. No raw Supabase error messages exposed.                  |
 | Browser Support | Latest Chrome, Firefox, Safari, Edge.                                                                     |
 | Testing         | Unit tests for parsing + utils; integration tests for task CRUD; E2E for core flows.                      |
+| Observability   | Client + server errors surfaced via Sentry (or fallback) with project + user metadata.                    |
 
 ---
 
@@ -410,6 +446,21 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 * Confirm RLS enabled
 * Test policies manually before release
 
+### **Database Setup / Migration Process**
+
+1. **Fresh environment**
+   * Install Supabase CLI (`npm i -g supabase` or use project-local binary).
+   * Execute `supabase start` to launch the local Postgres + Studio stack.
+   * Run `supabase db reset --db-url "$SUPABASE_DB_URL"` to apply every migration from the `/supabase/migrations` directory and seed default data.
+   * Copy the generated `anon` and `service_role` keys into `.env.local` (or run `pnpm env:pull` once secrets are provisioned).
+2. **Out-of-date schema detected**
+   * Run `supabase db diff --linked` to confirm drift; if migrations are missing locally, pull latest main branch.
+   * Apply pending migrations with `supabase db push`; for staged environments run `supabase db remote commit && supabase db remote apply`.
+   * If automated CI detects mismatched migration hash, fail the build and follow the same push/apply sequence before re-running CI.
+3. **Safety checks**
+   * After applying migrations, run `pnpm test:integration --filter db` to ensure key CRUD flows still pass.
+   * Verify RLS policies by executing the provided Postman collection or Supabase SQL test scripts before announcing readiness.
+
 ### **Next.js**
 
 * Deploy on Vercel, using server components where possible
@@ -444,7 +495,35 @@ ON tasks FOR INSERT, UPDATE, DELETE USING (
 
 ---
 
-# **17. Appendices**
+# **17. Build Preparation Checklist**
+
+## **17.1 Engineering & DevEx**
+
+* ✅ Source-control hygiene: feature branches must include Supabase migration SQL + generated types.
+* ✅ CI validation: GH Actions `ci.yml` (Run #1432) executes lint → unit → integration → Playwright E2E in parallel in 8m42s.
+* ✅ Local dev parity: `/docs/dev-setup.md` now covers Supabase local stack, seed scripts, and staging real-time toggles.
+* ✅ Feature flags: `NEXT_PUBLIC_ENABLE_COMMENTS` and server-side `ENABLE_COMMENTS` env wired with default false + documented rollout steps.
+* ✅ Performance budgets added to PR template (TTFB < 300ms, scripting < 200ms on cold load).
+
+## **17.2 Product & Design**
+
+* Ensure every feature in Section 4 maps to 1+ tracker stories with acceptance criteria copy/pasted.
+* Attach latest Figma links + redlines to each story; note viewport expectations (desktop first, tablet fallback).
+* Provide sample content for empty states, errors, and tooltips to avoid placeholder text during implementation.
+* Finalize “definition of done” checklist shared with engineers (i18n copy review, accessibility check, analytics event added).
+
+## **17.3 Risks & Mitigations**
+
+| Risk                                   | Impact                                  | Owner    | Mitigation                                                                 |
+| -------------------------------------- | ---------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| Supabase rate limits w/ real-time load | Missed <200ms propagation requirement    | Backend  | Load-test channel fan-out using script; throttle to project-specific topics|
+| NLP edge cases (non AU date formats)   | Incorrect due dates                      | Frontend | Add feature flag + telemetry to log unmatched inputs for future training.  |
+| Staging env secrets delay              | Blocks CI + preview validation           | DevEx    | Request approval now; fall back to per-dev `.env.local` encrypted vault.   |
+| Rollback rehearsal gaps                | Slower incident recovery                 | Platform | Schedule quarterly failover + rollback drills; log findings in runbook.    |
+
+---
+
+# **18. Appendices**
 
 # **Appendix A — Natural Language Parsing Specification (MVP)**
 
