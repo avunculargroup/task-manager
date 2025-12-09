@@ -45,12 +45,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq("id", user.id)
       .maybeSingle();
 
+    let nextProfile = data ?? null;
+
     if (error) {
       logError("Failed to fetch profile", { error: error.message });
       toast.error("Couldn't fetch your profile. Retrying...");
     }
 
-    setProfile(data ?? null);
+    if (!nextProfile) {
+      const metadata = user.user_metadata ?? {};
+      const { data: upserted, error: upsertError } = await supabaseClient
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            email: user.email ?? "",
+            full_name: metadata.full_name ?? null,
+            avatar_url: metadata.avatar_url ?? null,
+          },
+          { onConflict: "id" }
+        )
+        .select("*")
+        .single();
+
+      if (upsertError) {
+        logError("Failed to create profile", { error: upsertError.message });
+      } else {
+        nextProfile = upserted;
+      }
+    }
+
+    setProfile(nextProfile);
     setLoading(false);
   }, [supabaseClient, user]);
 

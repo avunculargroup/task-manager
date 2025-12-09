@@ -86,7 +86,7 @@ export const useTaskStore = create<TaskStore>()(
         filters: state.filters,
       }),
       storage: createJSONStorage(() => {
-        if (typeof window === \"undefined\") {
+        if (typeof window === "undefined") {
           return {
             getItem: () => null,
             setItem: () => {},

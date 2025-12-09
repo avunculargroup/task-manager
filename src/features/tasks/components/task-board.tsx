@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import type { Label, Project, TaskWithRelations } from "@/types/database";
 
 import { LabelManager } from "@/features/labels/components/label-manager";
+import { ProjectMembersList } from "@/features/projects/components/project-members-list";
 import { useFilteredTasks } from "@/features/tasks/selectors";
 import { useTaskStore } from "@/features/tasks/store";
 import type { ProjectMemberWithProfile } from "@/features/tasks/types";
@@ -62,6 +63,10 @@ export function TaskBoard({ project, projectId, tasksQuery, labelsQuery, members
           isLoading={labelsQuery.isLoading}
           onReset={resetFilters}
         />
+        <div className="mt-6 space-y-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Collaborators</p>
+          <ProjectMembersList members={membersQuery.data ?? []} isLoading={membersQuery.isLoading} />
+        </div>
       </header>
 
       <Card className="rounded-3xl border-slate-100 shadow-sm">

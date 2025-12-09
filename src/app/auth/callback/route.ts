@@ -7,10 +7,15 @@ import type { Database } from "@/types/database";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const type = requestUrl.searchParams.get("type");
 
   if (code) {
     const supabase = createRouteHandlerClient<Database>({ cookies });
     await supabase.auth.exchangeCodeForSession(code);
+  }
+
+  if (type === "recovery") {
+    return NextResponse.redirect(new URL("/auth/update-password", requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL("/dashboard", requestUrl.origin));
